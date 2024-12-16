@@ -1,0 +1,33 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-container
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: users_docker_db
+    ports:
+      - "3307:3306"
+    volumes:
+      - ./mysql:/docker-entrypoint-initdb.d
+
+  php:
+    build:
+      context: ./php
+    container_name: php-container
+    depends_on:
+      - mysql
+    ports:
+      - "8000:80"
+    environment:
+      DB_HOST: mysql
+      DB_NAME: users_docker_db
+      DB_USER: root
+      DB_PASSWORD: root
+
+  js:
+    build:
+      context: ./js
+    container_name: js-container
+    ports:
+      - "3000:80"
