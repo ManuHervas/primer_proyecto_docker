@@ -1,19 +1,30 @@
 <?php 
 
-    class Connection{
+    class Connection {
+    private $host;
+    private $dbname;
+    private $username;
+    private $password;
+    private $pdo;
 
-        private static $conn = null;
+    public function __construct($dbname, $username, $password) {        
+        $this->dbname = $dbname;
+        $this->username = $username;
+        $this->password = $password;
 
-        public static function getConnection(): PDO {
-            if (self::$conn == null) {                
-                self::$conn = new PDO("mysql:host=localhost;dbname=users_docker_db", 'root', 'root');
-                
-                //self::$conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            }
-            return self::$conn;
+        try {
+            $this->pdo = new PDO("mysql:host=mysql;dbname=$dbname", $username, $password);
+
+            
+            $this->pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        } catch (PDOException $e) {
+            die("Connection failed: " . $e->getMessage());
         }
-
     }
 
+    public function getConnection() {
+        return $this->pdo;
+    }
+}
 
 ?>

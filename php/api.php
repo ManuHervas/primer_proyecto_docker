@@ -1,25 +1,35 @@
 <?php
-header("Content-Type: application/json");
-
 header("Access-Control-Allow-Origin: *");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type");
 
+require_once 'Connection.php'; // Asegúrate de incluir la clase
 
-$conn = Connection::getConnection();
+// Configuración de conexión a la base de datos
+$dbname = 'users_docker_db';
+$username = 'root';
+$password = 'root';
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name =  $_POST['name'];
-    $email = $_POST['email'];
-    $conn->query("INSERT INTO users (name, email) VALUES ('$name', '$email')");
-    echo json_encode(["message" => "User added"]);
-} elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $result = $conn->query("SELECT * FROM users");
-    $users = [];
-    while ($row = $result->fetch_assoc()) {
-        $users[] = $row;
+try {
+    $db = new Connection($dbname, $username, $password);
+    $pdo = $db->getConnection();
+
+    if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+        $stmt = $pdo->query("SELECT * FROM users");
+        $users = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        echo json_encode($users);
+    } elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        $name = $_POST['name'];
+        $email = $_POST['email'];
+
+        $stmt = $pdo->prepare("INSERT INTO users (name, email) VALUES (:name, :email)");
+        $stmt->bindParam(':name', $name);
+        $stmt->bindParam(':email', $email);
+        $stmt->execute();
+
+        echo json_encode(['message' => 'User added successfully']);
     }
-    echo json_encode($users);
+} catch (Exception $e) {
+    http_response_code(500);
+    echo json_encode(['error' => $e->getMessage()]);
 }
-$conn->close();
-?>
